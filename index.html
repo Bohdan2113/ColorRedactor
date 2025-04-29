@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+
+    <title>Color redactor</title>
+  </head>
+  <body>
+    <header>
+      <h1 onclick="RemoveAll()" title="Get back Home">Color redactor</h1>
+      <button id="saveAs" onclick="SaveAsBut()" title="SaveAs">
+        <img src="Images/SaveAs.png" alt="save as" />
+      </button>
+      <button id="ctrlZ" onclick="UndoLastChange()" title="Undo last change">
+        <img src="Images/reply.png" alt="reply" />
+      </button>
+    </header>
+
+    <section id="work">
+      <div id="for-canvas">
+        <div id="imgUrl-block">
+          <button id="chooseImg-but" onclick="ChooseImg()">Choose image</button>
+          <p id="putImg-text">or put file here..</p>
+          <input
+            type="file"
+            id="fileInput"
+            accept="image/*"
+            hidden
+            onchange="handleFile(event)"
+          />
+        </div>
+        <canvas id="myCanvas"></canvas>
+        <span id="colorCircle"></span>
+      </div>
+
+      <div id="control-container">
+        <div id="current-pixel-info">
+          <p>Color of the current pixel:</p>
+          <div id="cur-colorHue">
+            <p id="cur-colorText">CMYK:</p>
+          </div>
+        </div>
+        <div id="params-container">
+          <div id="color-models-change">
+            <button
+              class="tab-button active"
+              id="cmyk-form-but"
+              onclick="switchModel('CMYK')"
+            >
+              CMYK
+            </button>
+            <button
+              class="tab-button"
+              id="xyz-form-but"
+              onclick="switchModel('XYZ')"
+            >
+              XYZ
+            </button>
+            <button
+              class="tab-button"
+              id="hsl-form-but"
+              onclick="switchModel('HSL')"
+            >
+              HSL
+            </button>
+          </div>
+          <form id="cmyk-form" class="color-form active">
+            <div class="input-group">
+              <label for="C-cmyk">C:</label>
+              <div class="range-group">
+                <input
+                  type="range"
+                  id="C-cmyk"
+                  name="C-cmyk"
+                  min="0"
+                  max="100"
+                  value="50"
+                  oninput="updateValue('C-cmyk', 'C-cmyk-value')"
+                />
+                <span id="C-cmyk-value">50</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="M-cmyk">M:</label>
+              <div class="range-group">
+                <input
+                  type="range"
+                  id="M-cmyk"
+                  name="M-cmyk"
+                  min="0"
+                  max="100"
+                  value="50"
+                  oninput="updateValue('M-cmyk', 'M-cmyk-value')"
+                />
+                <span id="M-cmyk-value">50</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="Y-cmyk">Y:</label>
+              <div class="range-group">
+                <input
+                  type="range"
+                  id="Y-cmyk"
+                  name="Y-cmyk"
+                  min="0"
+                  max="100"
+                  value="50"
+                  oninput="updateValue('Y-cmyk', 'Y-cmyk-value')"
+                />
+                <span id="Y-cmyk-value">50</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="K-cmyk">K:</label>
+              <div class="range-group">
+                <input
+                  type="range"
+                  id="K-cmyk"
+                  name="K-cmyk"
+                  min="0"
+                  max="100"
+                  value="50"
+                  oninput="updateValue('K-cmyk', 'K-cmyk-value')"
+                />
+                <span id="K-cmyk-value">50</span>
+              </div>
+            </div>
+          </form>
+          <form id="xyz-form" class="color-form">
+            <div class="input-group">
+              <label for="X-xyz">X:</label>
+              <div class="range-group">
+                <input
+                  type="range"
+                  id="X-xyz"
+                  name="X-xyz"
+                  min="0"
+                  max="100"
+                  value="50"
+                  oninput="updateValue('X-xyz', 'X-xyz-value')"
+                />
+                <span id="X-xyz-value">50</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="Y-xyz">Y:</label>
+              <div class="range-group">
+                <input
+                  type="range"
+                  id="Y-xyz"
+                  name="Y-xyz"
+                  min="0"
+                  max="100"
+                  value="50"
+                  oninput="updateValue('Y-xyz', 'Y-xyz-value')"
+                />
+                <span id="Y-xyz-value">50</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="Z-xyz">Z:</label>
+              <div class="range-group">
+                <input
+                  type="range"
+                  id="Z-xyz"
+                  name="Z-xyz"
+                  min="0"
+                  max="100"
+                  value="50"
+                  oninput="updateValue('Z-xyz', 'Z-xyz-value')"
+                />
+                <span id="Z-xyz-value">50</span>
+              </div>
+            </div>
+          </form>
+          <form id="hsl-form" class="color-form">
+            <div class="input-group">
+              <label for="hue-range-start">Start:</label>
+              <input
+                type="range"
+                id="hue-range-start"
+                min="0"
+                max="360"
+                name="hue-range-start"
+                value="40"
+                oninput="syncRanges(event, 'hue-range-start','hue-range-end')"
+              />
+            </div>
+            <div class="input-group">
+              <label for="hue-range-end">End:</label>
+              <input
+                type="range"
+                id="hue-range-end"
+                min="0"
+                max="360"
+                name="hue-range-end"
+                value="60"
+                oninput="syncRanges(event, 'hue-range-start','hue-range-end')"
+              />
+            </div>
+            <div class="input-group">
+              <label for="S-hsl">S:</label>
+              <div class="range-group">
+                <input
+                  type="range"
+                  id="S-hsl"
+                  name="S-hsl"
+                  min="0"
+                  max="100"
+                  value="50"
+                  oninput="updateValue('S-hsl', 'S-hsl-value')"
+                />
+                <span id="S-hsl-value">50</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="L-hsl">L:</label>
+              <div class="range-group">
+                <input
+                  type="range"
+                  id="L-hsl"
+                  name="L-hsl"
+                  min="0"
+                  max="100"
+                  value="50"
+                  oninput="updateValue('L-hsl', 'L-hsl-value')"
+                />
+                <span id="L-hsl-value">50</span>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div id="control-buttons">
+          <button id="discard-all" onclick="DiscardChanges() ">
+            Discard changes
+          </button>
+          <button id="save-all" onclick="SaveChanges() ">Save changes</button>
+        </div>
+      </div>
+    </section>
+
+    <script src="script.js"></script>
+  </body>
+</html>
