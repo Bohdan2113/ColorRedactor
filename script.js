@@ -249,7 +249,6 @@ function loadImage(file) {
 }
 
 function RemoveAll() {
-  alert("LOH");
   ClearWork();
   changesList = [];
 }
@@ -774,10 +773,6 @@ function RGBtoXYZ([r, g, b]) {
   let X = var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805;
   let Y = var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722;
   let Z = var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505;
-
-  // X = Math.round(X); // [0, 95]
-  // Y = Math.round(Y); // [0, 100]
-  // Z = Math.round(Z); // [0, 109]
 
   return [X, Y, Z];
 }
