@@ -106,7 +106,10 @@ window.onload = function () {
         curColorValue.textContent = `${curColorModel}: ${cmyk.join(", ")}`;
       } else if (curColorModel === "XYZ") {
         const xyz = RGBtoXYZ([r, g, b]);
-        curColorValue.textContent = `${curColorModel}: ${xyz.join(", ")}`;
+        const roundedXYZ = xyz.map((value) => parseFloat(value.toFixed(2)));
+        curColorValue.textContent = `${curColorModel}: ${roundedXYZ.join(
+          ", "
+        )}`;
       } else if (curColorModel === "HSL") {
         const hsl = RGBtoHSL([r, g, b]);
         curColorValue.textContent = `${curColorModel}: ${hsl[0]}°, ${hsl[1]}%, ${hsl[2]}%`;
@@ -126,8 +129,8 @@ window.onload = function () {
         startMoveY = e.clientY - rect.top;
         isDrawing = true;
 
-        HighlightAll_Img();
         RestoreCanvas(ctx, workableImage);
+        HighlightAll_Img();
       }
     }
   });
@@ -182,6 +185,24 @@ function initializeHSLEvents() {
   );
 }
 
+getEl("#hsl-info-but").addEventListener("click", () => openInfo("hsl-info"));
+document.addEventListener("click", (e) => {
+  const infoPopups = document.querySelectorAll(".info-popup");
+  const infoButtons = Array.from(document.querySelectorAll(".info-button"));
+
+  infoPopups.forEach((infoPopup) => {
+    const isClickInsidePopup = infoPopup.contains(e.target);
+    const isClickOnButton = infoButtons.some((btn) => btn.contains(e.target));
+
+    if (!isClickInsidePopup && !isClickOnButton) {
+      infoPopup.classList.add("hidden");
+    }
+  });
+});
+function openInfo(infoId) {
+  getEl(`#${infoId}`).classList.toggle("hidden");
+}
+
 function ChooseImg() {
   const fileInput = document.getElementById("fileInput");
   fileInput.click();
@@ -228,6 +249,7 @@ function loadImage(file) {
 }
 
 function RemoveAll() {
+  alert("LOH");
   ClearWork();
   changesList = [];
 }
@@ -260,7 +282,6 @@ function SaveChanges() {
   RestoreCanvas(ctx, workableImage);
   HighlightAll_Img();
   SaveCanvas(canvas);
-  changesList.push(workableImage);
 
   const forms = document.querySelectorAll(".color-form");
   forms.forEach((f) => ClearForm(f));
@@ -336,14 +357,23 @@ function switchModel(colorModel) {
     if (colorModel === "CMYK") ConvertImgToCMYK();
     else if (colorModel === "XYZ") ConvertImgToXYZ();
     else if (colorModel === "HSL") ConvertImgToHSL();
-    
-    console.log(`\nConverting from RGB to ${colorModel}`);
-    compareImages(originalData, workableImage.data);
-    meanColorError(originalData, workableImage.data);
-    maxColorError(originalData, workableImage.data);
-    PSNR(originalData, workableImage.data);
-
     HighlightAll_Img();
+
+    const acuracy = compareImages(originalData, workableImage.data);
+    const meanColorError = getMeanColorError(originalData, workableImage.data);
+    const maxColorError = getMaxColorError(originalData, workableImage.data);
+    const psnr = getPSNR(originalData, workableImage.data);
+
+    const diffField = getEl("#diff-text");
+    const diffHead = getEl("#diff-header-text");
+
+    diffHead.textContent = `After converting to ${colorModel}`;
+    diffField.innerHTML = `
+      <strong>Accuracy:</strong> ${acuracy}%<br>
+      <strong>Average color error:</strong> ${meanColorError} (out of 255)<br>
+      <strong>Max color error:</strong> ${maxColorError} (out of 255)<br><strong>PSNR:</strong> 
+      ${psnr === 0 ? `Infinite (perfect match)` : `${psnr} dB`}
+    `;
   }
 }
 
@@ -392,10 +422,10 @@ function RedrawHighlight() {
   RestoreCanvas(ctx, workableImage);
 
   if (isDrawing) {
-    highlightedStartX = Math.min(startX, endX);
-    highlightedStartY = Math.min(startY, endY);
-    const highlightedEndX = Math.max(startX, endX);
-    const highlightedEndY = Math.max(startY, endY);
+    highlightedStartX = Math.round(Math.min(startX, endX));
+    highlightedStartY = Math.round(Math.min(startY, endY));
+    const highlightedEndX = Math.round(Math.max(startX, endX));
+    const highlightedEndY = Math.round(Math.max(startY, endY));
 
     // Взяти все зображення
     highlightedImage = ctx.getImageData(
@@ -448,6 +478,7 @@ function InsightData(dest, source, x, y) {
   tempCtx.putImageData(dest, 0, 0);
   tempCtx.putImageData(source, x, y);
 
+  // Повертаємо ImageData, не зберігаючи тимчасовий канвас
   return tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
 }
 
@@ -510,12 +541,9 @@ function compareImages(originalData, newData) {
     }
   }
 
-  console.log(`Different/total pixels: ${differentPixels} / ${totalPixels}`);
-  console.log(
-    `Accuracy: ${(100 - (differentPixels / totalPixels) * 100).toFixed(2)}%`
-  );
+  return (100 - (differentPixels / totalPixels) * 100).toFixed(2);
 }
-function meanColorError(originalData, newData) {
+function getMeanColorError(originalData, newData) {
   let totalError = 0;
   let totalPixels = 0;
 
@@ -530,9 +558,9 @@ function meanColorError(originalData, newData) {
   }
 
   const meanError = totalError / totalPixels;
-  console.log(`Mean color error: ${meanError.toFixed(3)} (out of 255)`);
+  return meanError.toFixed(3);
 }
-function maxColorError(originalData, newData) {
+function getMaxColorError(originalData, newData) {
   let maxError = 0;
 
   for (let i = 0; i < originalData.length; i += 4) {
@@ -546,9 +574,9 @@ function maxColorError(originalData, newData) {
     }
   }
 
-  console.log(`Max color error: ${maxError.toFixed(3)} (out of 255)`);
+  return maxError.toFixed(3);
 }
-function PSNR(originalData, newData) {
+function getPSNR(originalData, newData) {
   let mse = 0;
   let totalPixels = 0;
 
@@ -564,12 +592,11 @@ function PSNR(originalData, newData) {
   mse = mse / (totalPixels * 3); // 3 канали на піксель
 
   if (mse === 0) {
-    console.log("PSNR: Infinite (perfect match)");
-    return;
+    return 0;
   }
 
   const psnr = 10 * Math.log10((255 * 255) / mse);
-  console.log(`PSNR: ${psnr.toFixed(2)} dB`);
+  return psnr.toFixed(2);
 }
 
 function ChangeAtr_CMYK(percent, atrIndex) {
@@ -577,20 +604,31 @@ function ChangeAtr_CMYK(percent, atrIndex) {
   const data = highlightedImage.data;
   const originalData = savedImage.data;
 
-  for (let i = 0; i < data.length; i += 4) {
-    let originalRGB = [
-      originalData[i],
-      originalData[i + 1],
-      originalData[i + 2],
-    ];
-    const originalCMYK = RGBtoCMYK(originalRGB);
+  for (let y = 0; y < highlightedImage.height; y++) {
+    for (let x = 0; x < highlightedImage.width; x++) {
+      const index = (y * highlightedImage.width + x) * 4;
 
-    let rgb = [data[i], data[i + 1], data[i + 2]];
-    const cmyk = RGBtoCMYK(rgb);
-    cmyk[atrIndex] = CalculateNewVal(originalCMYK[atrIndex], maxVal, percent);
+      // координати в savedImage
+      const savedX = highlightedStartX + x;
+      const savedY = highlightedStartY + y;
+      const savedIndex = (savedY * savedImage.width + savedX) * 4;
 
-    rgb = CMYKtoRGB(cmyk);
-    for (let j = 0; j < 3; j++) data[i + j] = rgb[j];
+      const originalRGB = [
+        originalData[savedIndex],
+        originalData[savedIndex + 1],
+        originalData[savedIndex + 2],
+      ];
+      const originalCMYK = RGBtoCMYK(originalRGB);
+
+      let rgb = [data[index], data[index + 1], data[index + 2]];
+      const cmyk = RGBtoCMYK(rgb);
+      cmyk[atrIndex] = Math.round(
+        CalculateNewVal(originalCMYK[atrIndex], maxVal, percent)
+      );
+
+      rgb = CMYKtoRGB(cmyk);
+      for (let j = 0; j < 3; j++) data[index + j] = rgb[j];
+    }
   }
 
   ctx.putImageData(highlightedImage, highlightedStartX, highlightedStartY);
@@ -605,20 +643,29 @@ function ChangeAtr_XYZ(percent, atrIndex, maxVal) {
   const data = highlightedImage.data;
   const originalData = savedImage.data;
 
-  for (let i = 0; i < data.length; i += 4) {
-    let originalRGB = [
-      originalData[i],
-      originalData[i + 1],
-      originalData[i + 2],
-    ];
-    const originalXYZ = RGBtoXYZ(originalRGB);
+  for (let y = 0; y < highlightedImage.height; y++) {
+    for (let x = 0; x < highlightedImage.width; x++) {
+      const index = (y * highlightedImage.width + x) * 4;
 
-    let rgb = [data[i], data[i + 1], data[i + 2]];
-    const xyz = RGBtoXYZ(rgb);
-    xyz[atrIndex] = CalculateNewVal(originalXYZ[atrIndex], maxVal, percent);
+      // координати в savedImage
+      const savedX = highlightedStartX + x;
+      const savedY = highlightedStartY + y;
+      const savedIndex = (savedY * savedImage.width + savedX) * 4;
 
-    rgb = XYZtoRGB(xyz);
-    for (let j = 0; j < 3; j++) data[i + j] = rgb[j];
+      let originalRGB = [
+        originalData[savedIndex],
+        originalData[savedIndex + 1],
+        originalData[savedIndex + 2],
+      ];
+      const originalXYZ = RGBtoXYZ(originalRGB);
+
+      let rgb = [data[index], data[index + 1], data[index + 2]];
+      const xyz = RGBtoXYZ(rgb);
+      xyz[atrIndex] = CalculateNewVal(originalXYZ[atrIndex], maxVal, percent);
+
+      rgb = XYZtoRGB(xyz);
+      for (let j = 0; j < 3; j++) data[index + j] = rgb[j];
+    }
   }
 
   ctx.putImageData(highlightedImage, highlightedStartX, highlightedStartY);
@@ -630,29 +677,38 @@ function ChangeAtr_XYZ(percent, atrIndex, maxVal) {
   );
 }
 function ChangeAtr_HSL(percent, atrIndex, hueStart, hueEnd) {
-  console.log(hueStart);
-  console.log(hueEnd);
   const maxVal = 100;
   const data = highlightedImage.data;
   const originalData = savedImage.data;
 
-  for (let i = 0; i < data.length; i += 4) {
-    let originalRGB = [
-      originalData[i],
-      originalData[i + 1],
-      originalData[i + 2],
-    ];
-    const originalHSL = RGBtoHSL(originalRGB);
+  for (let y = 0; y < highlightedImage.height; y++) {
+    for (let x = 0; x < highlightedImage.width; x++) {
+      const index = (y * highlightedImage.width + x) * 4;
 
-    let rgb = [data[i], data[i + 1], data[i + 2]];
-    const hsl = RGBtoHSL(rgb);
-    if (hsl[0] < hueStart || hsl[0] > hueEnd) {
-      continue;
+      // координати в savedImage
+      const savedX = highlightedStartX + x;
+      const savedY = highlightedStartY + y;
+      const savedIndex = (savedY * savedImage.width + savedX) * 4;
+
+      let originalRGB = [
+        originalData[savedIndex],
+        originalData[savedIndex + 1],
+        originalData[savedIndex + 2],
+      ];
+      const originalHSL = RGBtoHSL(originalRGB);
+
+      let rgb = [data[index], data[index + 1], data[index + 2]];
+      const hsl = RGBtoHSL(rgb);
+      if (hsl[0] < hueStart || hsl[0] > hueEnd) {
+        continue;
+      }
+      hsl[atrIndex] = Math.round(
+        CalculateNewVal(originalHSL[atrIndex], maxVal, percent)
+      );
+
+      rgb = HSLtoRGB(hsl);
+      for (let j = 0; j < 3; j++) data[index + j] = rgb[j];
     }
-    hsl[atrIndex] = CalculateNewVal(originalHSL[atrIndex], maxVal, percent);
-
-    rgb = HSLtoRGB(hsl);
-    for (let j = 0; j < 3; j++) data[i + j] = rgb[j];
   }
 
   ctx.putImageData(highlightedImage, highlightedStartX, highlightedStartY);
@@ -669,11 +725,11 @@ function CalculateNewVal(originalVal, maxVal, percent) {
   if (percent < 50) {
     const decreaseMax = originalVal;
     const ratio = percent / 50;
-    return Math.round(decreaseMax * ratio);
+    return decreaseMax * ratio;
   } else {
     const increaseMax = maxVal - originalVal;
     const ratio = (percent - 50) / 50;
-    return Math.round(originalVal + increaseMax * ratio);
+    return originalVal + increaseMax * ratio;
   }
 }
 
@@ -715,13 +771,13 @@ function RGBtoXYZ([r, g, b]) {
     .map((x) => x * 100);
 
   // Observer. = 2°, Illuminant = D65
-  X = var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805;
-  Y = var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722;
-  Z = var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505;
+  let X = var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805;
+  let Y = var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722;
+  let Z = var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505;
 
-  X = Math.round(X); // [0, 95]
-  Y = Math.round(Y); // [0, 100]
-  Z = Math.round(Z); // [0, 109]
+  // X = Math.round(X); // [0, 95]
+  // Y = Math.round(Y); // [0, 100]
+  // Z = Math.round(Z); // [0, 109]
 
   return [X, Y, Z];
 }
@@ -748,27 +804,29 @@ function RGBtoHSL([r, g, b]) {
   let [linear_R, linear_G, linear_B] = normalizeArr([r, g, b]);
 
   // get the min and max of r,g,b
-  var max = Math.max(linear_R, linear_G, linear_B);
-  var min = Math.min(linear_R, linear_G, linear_B);
+  let max = Math.max(linear_R, linear_G, linear_B);
+  let min = Math.min(linear_R, linear_G, linear_B);
 
   // lightness is the average of the largest and smallest color components
-  var lum = (max + min) / 2;
-  var hue;
-  var sat;
+  let lum = (max + min) / 2;
+  let hue;
+  let sat;
 
   if (max == min) {
     // no saturation
     hue = 0;
     sat = 0;
   } else {
-    var c = max - min; // chroma
+    let c = max - min; // chroma
     // saturation is simply the chroma scaled to fill
     // the interval [0, 1] for every combination of hue and lightness
     sat = c / (1 - Math.abs(2 * lum - 1));
+    let segment;
+    let shift;
     switch (max) {
       case linear_R:
-        var segment = (linear_G - linear_B) / c;
-        var shift = 0 / 60; // R° / (360° / hex sides)
+        segment = (linear_G - linear_B) / c;
+        shift = 0 / 60; // R° / (360° / hex sides)
         if (segment < 0) {
           // hue > 180, full rotation
           shift = 360 / 60; // R° / (360° / hex sides)
@@ -776,13 +834,13 @@ function RGBtoHSL([r, g, b]) {
         hue = segment + shift;
         break;
       case linear_G:
-        var segment = (linear_B - linear_R) / c;
-        var shift = 120 / 60; // G° / (360° / hex sides)
+        segment = (linear_B - linear_R) / c;
+        shift = 120 / 60; // G° / (360° / hex sides)
         hue = segment + shift;
         break;
       case linear_B:
-        var segment = (linear_R - linear_G) / c;
-        var shift = 240 / 60; // B° / (360° / hex sides)
+        segment = (linear_R - linear_G) / c;
+        shift = 240 / 60; // B° / (360° / hex sides)
         hue = segment + shift;
         break;
     }

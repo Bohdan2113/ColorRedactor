@@ -32,16 +32,6 @@ button:active {
   transform: scale(0.99);
 }
 
-#colorCircle {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid #000;
-  pointer-events: none; /* Щоб не заважав мишці */
-  display: none;
-}
-
 header {
   display: flex;
   align-items: center;
@@ -162,7 +152,7 @@ h1:active {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  padding: 10px;
+  padding: 1rem;
   background-color: #f9f9f9;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -207,14 +197,13 @@ h1:active {
 #params-container {
   flex: 1;
   width: 100%;
-  height: 100%;
+  height: auto;
 
   display: flex;
   flex-direction: column;
   align-items: center;
 
   border-radius: 20px;
-  padding: 1rem;
 }
 #color-models-change {
   width: 100%;
@@ -243,11 +232,13 @@ h1:active {
   border-bottom: 2px solid #ffffff;
 }
 .color-form {
+  position: relative;
   display: none;
   flex-direction: column;
+  align-items: center;
   gap: 1.5rem;
   width: 100%;
-  padding: 1.5rem;
+  padding: 1rem;
 
   border-radius: 0 0 10px 10px;
   background-color: #ffffff;
@@ -259,26 +250,30 @@ h1:active {
 
 .input-group {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: space-between;
   align-items: center;
+  gap: 1.5rem;
+}
+.input-group label {
+  min-width: 100px;
 }
 .range-group {
   display: flex;
+  justify-content: start;
   align-items: center;
   gap: 0.5rem;
-  width: 200px;
+  width: 230px;
 }
 .range-group span::after {
   content: "%";
-  margin-left: 5px;
 }
 input[type="range"] {
-  width: 170px;
+  width: 200px;
 }
 
 #hue-range-start,
 #hue-range-end {
-  width: 250px;
+  width: 230px;
   height: 20px;
   background: linear-gradient(
     to right,
@@ -311,13 +306,86 @@ input[type="range"] {
   background: hsl(var(--hue-end), 100%, 50%);
 }
 
+#diff-container {
+  flex: 100;
+  width: 100%;
+  padding: 1rem;
+  padding-top: 0;
+  border-radius: 0 0 10px 10px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  overflow-y: auto;
+}
+#diff-text {
+  font-size: 15px;
+  padding: 0.3rem;
+}
+#diff-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  background-color: #fff;
+  
+  padding: 0.7rem 0;
+  border-bottom: 1px solid black;
+}
+#diff-header-text {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+.info-button {
+  background-color: transparent;
+  border: 0.5px solid #007bff;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #007bff;
+
+  padding: 0;
+  width: 19px;
+  height: 19px;
+
+  font-weight: bold;
+  font-size: 0.9em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  position: absolute;
+  z-index: 2;
+  top: 13px;
+  right: 10px;
+}
+.info-popup {
+  display: inline-block;
+  background-color: #f9f9f9;
+  border: 1px solid #6f6f6f;
+  color: #333;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  max-width: 340px;
+  max-height: 130px;
+  overflow-y: auto;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+  position: absolute;
+  z-index: 10;
+  top: 33px;
+  right: 10px;
+}
+.hidden {
+  display: none !important;
+}
+
 #control-buttons {
-  flex: 1;
   display: flex;
   justify-content: space-evenly;
-  align-items: end;
+  align-items: center;
   width: 100%;
-  padding: 20px;
+  height: auto;
+  /* padding: 20px; */
 }
 #save-all,
 #discard-all {

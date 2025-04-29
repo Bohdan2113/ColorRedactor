@@ -13,7 +13,7 @@
       <button id="saveAs" onclick="SaveAsBut()" title="SaveAs">
         <img src="Images/SaveAs.png" alt="save as" />
       </button>
-      <button id="ctrlZ" onclick="UndoLastChange()" title="Undo last change">
+      <button id="ctrlZ" onclick="UndoLastChange()" title="Undo last save">
         <img src="Images/reply.png" alt="reply" />
       </button>
     </header>
@@ -68,7 +68,7 @@
           </div>
           <form id="cmyk-form" class="color-form active">
             <div class="input-group">
-              <label for="C-cmyk">C:</label>
+              <label for="C-cmyk">C (cyan):</label>
               <div class="range-group">
                 <input
                   type="range"
@@ -83,7 +83,7 @@
               </div>
             </div>
             <div class="input-group">
-              <label for="M-cmyk">M:</label>
+              <label for="M-cmyk">M (magenta):</label>
               <div class="range-group">
                 <input
                   type="range"
@@ -98,7 +98,7 @@
               </div>
             </div>
             <div class="input-group">
-              <label for="Y-cmyk">Y:</label>
+              <label for="Y-cmyk">Y (yellow):</label>
               <div class="range-group">
                 <input
                   type="range"
@@ -113,7 +113,7 @@
               </div>
             </div>
             <div class="input-group">
-              <label for="K-cmyk">K:</label>
+              <label for="K-cmyk">K (black):</label>
               <div class="range-group">
                 <input
                   type="range"
@@ -176,8 +176,16 @@
             </div>
           </form>
           <form id="hsl-form" class="color-form">
+            <div></div>
+            <div id="hsl-info-but" class="info-button">i</div>
+            <span id="hsl-info" class="info-popup hidden">
+              Виберіть діапазон кольору (Hue), щоб змінити його насиченість
+              (Saturation) та яскравість (Lightness). Це дозволяє точно
+              налаштувати окремі кольори на зображенні — наприклад, зробити
+              траву яскравішою або небо менш насиченим.
+            </span>
             <div class="input-group">
-              <label for="hue-range-start">Start:</label>
+              <label for="hue-range-start">(Hue) Start:</label>
               <input
                 type="range"
                 id="hue-range-start"
@@ -189,7 +197,7 @@
               />
             </div>
             <div class="input-group">
-              <label for="hue-range-end">End:</label>
+              <label for="hue-range-end">(Hue) End:</label>
               <input
                 type="range"
                 id="hue-range-end"
@@ -201,7 +209,7 @@
               />
             </div>
             <div class="input-group">
-              <label for="S-hsl">S:</label>
+              <label for="S-hsl">S (saturation):</label>
               <div class="range-group">
                 <input
                   type="range"
@@ -216,7 +224,7 @@
               </div>
             </div>
             <div class="input-group">
-              <label for="L-hsl">L:</label>
+              <label for="L-hsl">L (lightness):</label>
               <div class="range-group">
                 <input
                   type="range"
@@ -232,11 +240,32 @@
             </div>
           </form>
         </div>
+        <div id="diff-container">
+          <div id="diff-header">
+            <p id="diff-header-text"></p>
+            <button class="info-button" onclick="openInfo('diff-info')">
+              i
+            </button>
+            <span id="diff-info" class="info-popup hidden">
+              Це відображає різницю відображення кольорів (RGB) між останнім
+              збереженим зображенням та поточним.<br />
+              <strong>Acuracy</strong> - відношення кількості точно переданих пікселів до загальної кількість пікселів<br />
+              <strong>Average color error</strong> - середня похибка передання
+              кольору<br />
+              <strong>Max color error</strong> - найбільша похибка передання
+              кольору<br />
+              <strong>PSNR</strong> - шуми, чим вища ця величина, тим менше
+              відмінностей між зображеннями (30-40: добра передача кольору.).
+            </span>
+          </div>
+          <div id="diff-text"></div>
+        </div>
+
         <div id="control-buttons">
-          <button id="discard-all" onclick="DiscardChanges() ">
+          <button id="discard-all" onclick="DiscardChanges()" title="Doiscard unsaved changes">
             Discard changes
           </button>
-          <button id="save-all" onclick="SaveChanges() ">Save changes</button>
+          <button id="save-all" onclick="SaveChanges()" title="Make changes permanent">Save changes</button>
         </div>
       </div>
     </section>
