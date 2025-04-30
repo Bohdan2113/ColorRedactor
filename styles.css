@@ -257,6 +257,34 @@ h1:active {
   display: flex;
 }
 
+.decrement-button,
+.increment-button {
+  width: 15px;
+  height: 15px;
+  padding: 0;
+
+  background-color: transparent;
+  color: #007bff;
+  border: 2px solid #007bff;
+  border-radius: 50%;
+  font-size: 15px;
+  line-height: 15px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+.decrement-button:hover,
+.increment-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.1);
+}
+.decrement-button:active,
+.increment-button:active {
+  background-color: #003f7f;
+  transform: scale(0.95);
+}
 .input-group {
   display: flex;
   justify-content: space-between;
@@ -277,12 +305,12 @@ h1:active {
   content: "%";
 }
 input[type="range"] {
-  width: 200px;
+  width: 130px;
 }
 
 #hue-range-start,
 #hue-range-end {
-  width: 230px;
+  width: 180px;
   height: 20px;
   background: linear-gradient(
     to right,
@@ -335,7 +363,7 @@ input[type="range"] {
   top: 0;
   left: 0;
   background-color: #fff;
-  
+
   padding: 0.7rem 0;
   border-bottom: 1px solid black;
 }
@@ -386,6 +414,14 @@ input[type="range"] {
 }
 .hidden {
   display: none !important;
+}
+#max-color-span {
+  display: inline-block;
+  min-width: 20px;
+  min-height: 10px;
+  border-radius: 30%;
+  border: 1px solid black;
+  margin: 0 10px;
 }
 
 #control-buttons {
