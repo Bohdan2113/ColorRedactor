@@ -322,6 +322,7 @@ function switchModel(colorModel) {
 
   if (savedImage) {
     DiscardChanges();
+    savedImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
     const formId = colorModel.toLowerCase() + "-form";
     document.querySelectorAll(".color-form, .tab-button").forEach((form) => {
