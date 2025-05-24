@@ -223,7 +223,7 @@ function loadImage(file) {
 
       SaveCanvas(canvas);
       HighlightAll_Img();
-      switchModel("HSL");
+      switchModel("XYZ");
     };
     img.src = e.target.result;
   };
@@ -499,9 +499,13 @@ function ConvertImgToHSL() {
   RestoreCanvas(ctx, workableImage);
 }
 
+function closeOverlay() {
+  getEl(`#${overlay}`).classList.add("hidden");
+}
 function OutputDiffInfo(originalData, workableData) {
   const acuracy = compareImages(originalData, workableData);
   const meanColorError = getMeanColorError(originalData, workableData);
+  const pixels = getPixelsMeanError(originalData, workableData, meanColorError);
   const maxColorError = getMaxColorError(originalData, workableData);
   const psnr = getPSNR(originalData, workableData);
 
@@ -556,6 +560,14 @@ function OutputDiffInfo(originalData, workableData) {
   }
   psnrParagraph.innerHTML = `<strong>PSNR:</strong> ${psnrText}`;
   diffField.appendChild(psnrParagraph);
+
+  pixels.forEach((pixel) => {
+    const pixelParagraph = document.createElement("p");
+    pixelParagraph.innerHTML = `<strong>Pixel:</strong> ${
+      pixel.pixel
+    }, <strong>Error:</strong> ${pixel.errorVal.toFixed(3)}`;
+    diffField.appendChild(pixelParagraph);
+  });
 }
 function compareImages(originalData, newData) {
   const tolerance = 1; // допустима похибка в 1 одиницю кольору
@@ -592,6 +604,42 @@ function getMeanColorError(originalData, newData) {
 
   const meanError = totalError / totalPixels;
   return meanError.toFixed(3);
+}
+function getPixelsMeanError(originalData, newData, meanError) {
+  let pixels = [];
+
+  for (let i = 0; i < originalData.length; i += 4) {
+    const rDiff = Math.abs(originalData[i] - newData[i]);
+    const gDiff = Math.abs(originalData[i + 1] - newData[i + 1]);
+    const bDiff = Math.abs(originalData[i + 2] - newData[i + 2]);
+
+    const pixelError = (rDiff + gDiff + bDiff) / 3;
+
+    if (pixels.length < 2)
+      pixels.push({
+        pixel: `rgb(${newData[i]}, ${newData[i + 1]}, ${newData[i + 2]})`,
+        errorVal: pixelError,
+      });
+    else {
+      let index =
+        Math.abs(pixels[0].errorVal - meanError) >
+        Math.abs(pixels[1].errorVal - meanError)
+          ? 0
+          : 1;
+
+      if (
+        Math.abs(pixelError - meanError) <
+        pixels[index].errorVal - meanError
+      ) {
+        pixels[index].pixel = `rgb(${newData[i]}, ${newData[i + 1]}, ${
+          newData[i + 2]
+        })`;
+        pixels[index].errorVal = pixelError;
+      }
+    }
+  }
+
+  return pixels;
 }
 function getMaxColorError(originalData, newData) {
   let maxError = 0;
